@@ -162,7 +162,18 @@ td *{margin:auto 0;vertical-align: middle;}td input{margin-left:3px;}
             <tr>
               <td><?php echo $text_optimize_db ?></td>
               <td>
-                <a href="<?php echo $optimize_db_link ?>" class="button"><?php echo $text_optimixe_db_button ?></a>
+                <a href="<?php echo $optimize_db_link ?>" class="button"><?php echo $text_optimize_db_button ?></a>
+                <?php if ($optimize_db_result): ?>
+                <a href="#" onClick="$('#optimize_db_result').remove();$(this).remove();return false;" class="button"><?php echo $text_optimize_db_button_remove ?></a>
+                  <table id="optimize_db_result">
+                    <?php foreach ($optimize_db_result as $key => $result): ?>
+                      <tr>
+                        <td><?php echo $result['name'] ?></td>
+                        <td><?php echo $result['result'] ?></td>
+                      </tr>
+                    <?php endforeach ?>
+                  </table> 
+                <?php endif ?>
               </td>
             </tr>
           </table>
@@ -504,7 +515,6 @@ td *{margin:auto 0;vertical-align: middle;}td input{margin-left:3px;}
       <div id="tab-cache-manager" class="tab-container">
         <?php if (count($cache_list) != 0) { ?>
         <div class="buttons" style="margin-bottom:10px;float:right;display:block;">
-          <a onclick="$('.chkcss').prop('checked','true');return false;" class="button"><?php echo $button_select_css; ?></a>
           <a onclick="$('#del_form').submit();" class="button"><?php echo $button_delete; ?></a>
         </div><br />
         <table class="list" id="cachemanager">
@@ -574,9 +584,9 @@ td *{margin:auto 0;vertical-align: middle;}td input{margin-left:3px;}
           <div class="buttons" style="float:left; margin-bottom:10px; display:block;">
             <span class="error"><?php echo $htaccess_not_writable; ?></span>
           </div>
-          <?php } ?>
+          <? } ?>
         <div class="buttons" style="float:left; margin-bottom:10px; display:block;">
-          <a class="button" href="http://mclite.halfhope.ru/htaccess.html" target="_blank"><?php echo $htaccess_author; ?></a>
+          <a class="button" href="http://mcj.halfhope.ru/htaccess.html" target="_blank"><?php echo $htaccess_author; ?></a>
         </div>
         <div class="buttons" style="float:right; margin-bottom:10px; display:block;">
           <a onclick="$('#htaccess_form').submit();" class="button"><?php echo $button_save; ?></a>
@@ -589,9 +599,9 @@ td *{margin:auto 0;vertical-align: middle;}td input{margin-left:3px;}
           <div id="apm" style="display:none;">
             <?php foreach ($apache_m as $key => $value) { ?>
               <span class="filename grid_obj"><?php echo $value ?></span>
-            <?php } ?>
+            <? } ?>
           </div>
-        <?php } ?>
+        <? } ?>
         <?php }else{ ?>
         <center class="error"><?php echo $htaccess_not_found; ?></center>
         <?php } ?>

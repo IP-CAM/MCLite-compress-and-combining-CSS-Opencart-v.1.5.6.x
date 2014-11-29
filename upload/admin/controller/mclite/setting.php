@@ -4,7 +4,8 @@
 */
 class ControllerMcliteSetting extends Controller {
 	private $error = array();
- 
+ 	static $weekdays = array('понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье');
+
 	public function index() {
 		$this->language->load('mclite/setting'); 
 
@@ -26,7 +27,8 @@ class ControllerMcliteSetting extends Controller {
 				$elem['filepath'] = pathinfo($elem['filename']);
 				$elem['is_file'] = is_file('../'.$value['filename']);
 				if ($elem['is_file']) {
-						$elem['last_modified'] = date('Y.m.d [H:i:s]', filemtime('../'.$elem['filename']));
+						// $elem['last_modified'] = date('Y.m.d [H:i:s]', filemtime('../'.$elem['filename']));
+						$elem['last_modified'] = $this->HumanDatePrecise(date('r', filemtime('../'.$elem['filename'])));
 					//Size
 	                	preg_match_all('/_\[(.*)?\]_/', file_get_contents('../'.$value['filename']), $files);
 		                $sum_filesizes = null;
@@ -102,7 +104,6 @@ class ControllerMcliteSetting extends Controller {
 		$this->data['button_save'] 		= $this->language->get('button_save');
 		$this->data['button_cancel'] 	= $this->language->get('button_cancel');
 		$this->data['button_delete'] 	= $this->language->get('button_delete');
-		$this->data['button_select_css'] 	= $this->language->get('button_select_css');
 		
 		$this->data['success'] = $this->language->get('text_success');
 		$this->data['use_static_gzip'] = $this->language->get('text_use_static_gzip');
@@ -117,7 +118,8 @@ class ControllerMcliteSetting extends Controller {
 		$this->data['help_file'] = $this->language->get('text_help_file');
 		$this->data['help_file_gen'] = $this->language->get('text_help_file_gen');
 		$this->data['text_optimize_db'] = $this->language->get('text_optimize_db');
-		$this->data['text_optimixe_db_button'] = $this->language->get('text_optimixe_db_button');
+		$this->data['text_optimize_db_button'] = $this->language->get('text_optimize_db_button');
+		$this->data['text_optimize_db_button_remove'] = $this->language->get('text_optimize_db_button_remove');
 		
 		$this->data['html_minimize_library'] = $this->language->get('text_html_minimize_library');
 		$this->data['html_minimize_library_Minify_HTML'] = $this->language->get('text_html_minimize_library_Minify_HTML');
@@ -221,7 +223,16 @@ class ControllerMcliteSetting extends Controller {
 		$this->data['optimize_db_link'] = $this->url->link('mclite/setting/optimize_db', 'token=' . $this->session->data['token'], 'SSL');
 		
 		$this->data['cancel'] = $this->url->link('common/home', 'token=' . $this->session->data['token'], 'SSL');
+
+		//Обработка сообщения при оптимизации БД
+		if (isset($this->session->data['optimize_db_result'])) {
+			$this->data['optimize_db_result'] = $this->session->data['optimize_db_result'];
 		
+			unset($this->session->data['optimize_db_result']);
+		} else {
+			$this->data['optimize_db_result'] = '';
+		}
+
 		$this->data['token'] = $this->session->data['token'];
 		//CSSMIN SETTINGS ############################################################################
 			//PLUGINS
@@ -482,7 +493,7 @@ class ControllerMcliteSetting extends Controller {
 					if (is_file('../'.$cache_list[$name]['filename'].'gz')) {
 						unlink('../'.$cache_list[$name]['filename'].'gz');
 					}
-						unset($cache_list[$name]);
+					unset($cache_list[$name]);
 				}
 			}
 			$this->model_mclite_setting->saveCache(json_encode($cache_list));
@@ -519,8 +530,9 @@ class ControllerMcliteSetting extends Controller {
 		$this->document->setTitle($this->language->get('heading_title'));
 		//Unset client private parameters
 		if ($this->user->hasPermission('modify', 'mclite/setting')) {
-			$this->model_mclite_setting->optimizeTables();
+			$result = $this->model_mclite_setting->optimizeTables();
 			$this->session->data['success'] = $this->language->get('text_success_db_optim');
+			$this->session->data['optimize_db_result'] = $result;
 		}else{
  			$this->session->data['warning']= $this->language->get('error_permission');
 		}
@@ -552,8 +564,121 @@ class ControllerMcliteSetting extends Controller {
 			}
 		}
 		$this->data['ajax'] = json_encode($result);
-		$this->template = 'mclite/ajax.tpl';
-		$this->response->setOutput($this->render());
+		$this->response->setOutput($this->data['ajax']);
 	}
+	public function HumanDatePrecise($date) {
+	    $r = false;
+	    $a = preg_split("/[:\.\s-]+/", $date);
+	    $d = time() - strtotime($date);
+	    if ($d > 0) {
+	      if ($d < 3600) {
+	        switch (floor($d / 60)) {
+	          case 0:
+	          case 1:
+	            return "<acronym title='$date'>только что</acronym>";
+	            break;
+	          case 2:
+	            return "<acronym title='$date'>только что</acronym>";
+	            break;
+	          case 3:
+	            return "<acronym title='$date'>три минуты назад</acronym>";
+	            break;
+	          case 4:
+	            return "<acronym title='$date'>четыре минуты назад</acronym>";
+	            break;
+	          case 5:
+	            return "<acronym title='$date'>пять минут минуты назад</acronym>";
+	            break;
+	          default:
+	            return "<acronym title='$date'>" . floor($d / 60) . ' мин. назад</acronym>';
+	            break;
+	        };
+	      } elseif ($d < 18000) {
+	        switch (floor($d / 3600)) {
+	          case 1:
+	            return "<acronym title='$date'>час назад</acronym>";
+	            break;
+	          case 2:
+	            return "<acronym title='$date'>два часа назад</acronym>";
+	            break;
+	          case 3:
+	            return "<acronym title='$date'>три часа назад</acronym>";
+	            break;
+	          case 4:
+	            return "<acronym title='$date'>четыре часа назад</acronym>";
+	            break;
+	        };
+	      } elseif ($d < 172800) {
+	        if (date('d') == $a[2]) {
+	          return "<acronym title='$date'>сегодня в {$a[3]}:{$a[4]}</acronym>";
+	        }
+	        if (date('d', time() - 86400) == $a[2]) {
+	          return "<acronym title='$date'>вчера в {$a[3]}:{$a[4]}</acronym>";
+	        }
+	        if (date('d', time() - 172800) == $a[2]) {
+	          return "<acronym title='$date'>позавчера в {$a[3]}:{$a[4]}</acronym>";
+	        }
+	      }
+	    } else {
+	      $d *= - 1;
+	      if ($d < 3600) {
+	        switch (floor($d / 60)) {
+	          case 0:
+	          case 1:
+	            return "<acronym title='$date'>сейчас</acronym>";
+	            break;
+	          case 2:
+	            return "<acronym title='$date'>через две минуты</acronym>";
+	            break;
+	          case 3:
+	            return "<acronym title='$date'>через три минуты</acronym>";
+	            break;
+	          case 4:
+	            return "<acronym title='$date'>через четыре минуты</acronym>";
+	            break;
+	          case 5:
+	            return "<acronym title='$date'>через пять минут</acronym>";
+	            break;
+	          default:
+	            return "<acronym title='$date'>через " . floor($d / 60) . ' мин.</acronym>';
+	            break;
+	        };
+	      } elseif ($d < 18000) {
+	        switch (floor($d / 3600)) {
+	          case 1:
+	            return "<acronym title='$date'>через час</acronym>";
+	            break;
+	          case 2:
+	            return "<acronym title='$date'>через два часа</acronym>";
+	            break;
+	          case 3:
+	            return "<acronym title='$date'>через три часа</acronym>";
+	            break;
+	          case 4:
+	            return "<acronym title='$date'>через четыре часа</acronym>";
+	            break;
+	        };
+	      } elseif ($d < 172800) {
+	        if (date('d') == $a[2]) {
+	          return "<acronym title='$date'>сегодня в {$a[3]}:{$a[4]}</acronym>";
+	        }
+	        if (date('d', time() - 86400) == $a[2]) {
+	          return "<acronym title='$date'>завтра в {$a[3]}:{$a[4]}</acronym>";
+	        }
+	        if (date('d', time() - 172800) == $a[2]) {
+	          return "<acronym title='$date'>послезавтра в {$a[3]}:{$a[4]}</acronym>";
+	        }
+	      }
+	      $d *= - 1;
+	    }
+
+	    $r = "{$a[2]}.{$a[1]}";
+	    if ($a[0] != date('Y') OR $d > 0) {
+	      $r .= '.' . $a[0];
+	    }
+	    $r .= " {$a[3]}:{$a[4]}";
+	    $date = date_format(new DateTime($date), 'Y-m-d H:i:s');
+	    return "<acronym title='$date'>$date</acronym>";
+	  } 
 }
 ?>

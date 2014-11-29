@@ -47,5 +47,6 @@ foreach ($files as $key => $value) {
 foreach ($dirs as $key => $value) {
 	@rmdir($value);
 }
+unlink(__FILE__);
 echo "<html><head><title>mclite database and files deleted.</title></head><body><h1>mclite database and files deleted.</h1></body></html>";
 ?>

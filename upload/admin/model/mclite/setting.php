@@ -45,22 +45,27 @@ class ModelMcliteSetting extends Model {
 			$this->db->query("UDPATE " . DB_PREFIX . "setting SET `value` = '" . $this->db->escape(serialize($value)) . "' WHERE `group` = '" . $this->db->escape($group) . "' AND `key` = '" . $this->db->escape($key) . "' AND store_id = '" . (int)$store_id . "', serialized = '1'");
 		}
 	}
+	// Функция оптимизации БД
 	public function optimizeTables(){
 		$link = null;
 		if (!$link = mysql_connect(DB_HOSTNAME, DB_USERNAME, DB_PASSWORD)) {
       		trigger_error('Error: Could not make a database link using ' . DB_USERNAME . '@' . DB_HOSTNAME);
 		}else{
+			mysql_select_db(DB_DATABASE);
 			$alltables = mysql_query("SHOW TABLES", $link);
 
 			while ($table = mysql_fetch_assoc($alltables)){
 				foreach ($table as $db => $tablename){
-					//$row['name'] 	= $tablename;
-					$result 	= mysql_query("OPTIMIZE TABLE '".$tablename."'", $link);
-					//$result[] = $row;
+					$row = array();
+					$mysql_result = mysql_fetch_array( mysql_query("OPTIMIZE TABLE `".$tablename."`", $link) );
+					$row['name'] 	= $mysql_result['Table'];
+					$row['result'] 	= $mysql_result['Msg_text'];
+					$result[] = $row;
+					unset($row);
 				}
 			}
-			//mysql_close($link);
-			//return $result;
+			mysql_close($link);
+			return $result;
 		}
 	}
 }

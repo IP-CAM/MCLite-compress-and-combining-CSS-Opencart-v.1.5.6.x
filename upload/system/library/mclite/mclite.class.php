@@ -2,7 +2,7 @@
 	/**
 	 * Class for auto minify, merge and compress css
 	 * @author Shashsakhmetov Talgat <talgatks@gmail.com>
-	 * @version 1.0 
+	 * @version 1.1 
 	 */
 	class mclite{
 		private $settings 	= array();
@@ -24,7 +24,7 @@
 				$loader->helper('json');
 			}
 			$config = $this->registry->get('config');
-			
+			//Load settings from OpenCart
 			$settings = array(
 				'changed' => false,
 				'common' => array(
@@ -37,8 +37,7 @@
 					'cdn_addr' 							=> 	$config->get('mclite_cdn_addr'),
 					'cdn_css'							=>	$config->get('mclite_cdn_css'),
 					'cdn_imgs'							=>	$config->get('mclite_cdn_imgs'),
-					'cdn_css_url'						=>	$config->get('mclite_cdn_cssurl'),
-					'debug_mode' 						=>	$config->get('mclite_debug_mode')
+					'cdn_css_url'						=>	$config->get('mclite_cdn_cssurl')
 				),
 				'css' => array(
 					'processing' 						=> $config->get('mclite_css_processing'),
@@ -122,7 +121,7 @@
 					'cdn_addr' 				=> 	'',
 					'cdn_css'				=>	false,
 					'cdn_imgs'				=>	false,
-					'cdn_css_url'			=>	false,
+					'cdn_css_url'			=>	false
 				),
 				'css' => array(
 					'processing' 			=> true,
@@ -244,9 +243,11 @@
 		private function addStyle($href, $media, $gz = true, $hash = null)
 		{
 			if (!empty($this->settings['common']['cdn_addr']) && ($this->settings['common']['cdn_css'] == true)){
-				$href = trim($this->settings['common']['cdn_addr'],'/').'/'.$href;
+				$href = trim($this->settings['common']['cdn_addr'],'/').'/'. $href;
 			}
+			
 			$perfix = ($this->is_MSIE || !$gz) ? '' : 'gz';
+
 			$href = ($this->settings['common']['use_static_gzip']) ? $href .= $perfix : $href;
 
 			$this->m_styles[] = array(
@@ -282,7 +283,6 @@
 			$preg[2] = '/<link[^>](?:rel=\"stylesheet\")+[ a-zA-Z0-9="\/]+href="(.+?)"+[ a-zA-Z0-9="\/](?:media=\"(.*)?\")?[^>]*\/>/';
 			$preg[4] = '/\<html[^.]*\>(.*?)<\/html>/s';
 			$preg[6] = '/\<img[^>]*src="(.*?)\"[^>]*\/>/i';
-
 			# 	Process If Def IE 		##########################################
 			if ($css['processing']) {
 				preg_match_all($preg[0], $header_content, $if_def_matches, PREG_SET_ORDER);
@@ -376,9 +376,9 @@
 			$header_content = preg_replace('/\\n\\r/', '', $header_content);
 			#	Add dns perfetch
 			if (!empty($common['cdn_addr'])) {
-				preg_match_all('/\<\/head(.?)*\>/', $header_content, $matches);
-				$gen = '<link rel="dns-perfetch" href="'.trim($common['cdn_addr']).'">'.PHP_EOL.$matches[0][0]; 
-				$header_content = preg_replace('/\<\/head(.?)*\>/', $gen, $header_content, 1);
+				preg_match('/<head>/', $header_content, $matches);
+				$gen = $matches[0].PHP_EOL.'<link rel="dns-perfetch" href="'.trim($common['cdn_addr']).'">'; 
+				$header_content = preg_replace('/<head>/', $gen, $header_content, 1);
 				
 			}
 			#	END Add dns perfetch
@@ -456,59 +456,72 @@
 			extract($this->settings);
 			$media_types = array();
 			if (is_array($files) && count($files) > 0) {
+				// Обработка массива стилкй
 				foreach ($files as $key => $value) {
 					$media_types[$value['media']][] = $value;
 				}
-				unset($files);
+				//сортировка по медиатипам (screen, tablet, phone и т.д.)
 				foreach ($media_types as $media_type) {
+					//Обнуление переменных
 					$params = array();
-					$params['last_modified'] = 0;
 					$params['id'] = '';
-					
+					//Если используется быстрое кэширование
 					if($common['use_ultra_cache']){
+						//Создание уникального имени для всех стилей в медиатипе
 						foreach ($media_type as $key => $value) {
-							$params['id']				.= $value['href'];
+							$params['id'] .= $value['href'];
 						}
 						$params['id'] = substr(md5($params['id']), 16);
-						
+						//Вычисляем название файла
 						$css_file_name = $directory.'/'.$params['id'].'.css';
 						
+						//Не проверяем
+						$file_exists = file_exists($css_file_name);
 						$in_cache_list = true;
 						$is_modified = false;
 					}else{
+						//Создание уникального имени для всех стилей в медиатипе
 						foreach ($media_type as $key => $value) {
-							$params['last_modified'] 	+= filemtime($value['href']);
 							$params['id']				.= $value['href'];
 						}
 						$params['id'] = substr(md5($params['id']), 16);
-						
+						//Вычисляем название файла
 						$css_file_name = $directory.'/'.$params['id'].'.css';
-						$in_cache_list = array_key_exists($params['id'], $common['cache_list']);
-						if (isset($common['cache_list'][$params['id']])) {
-							if (array_key_exists($params['id'], $common['cache_list'])) {
-								$is_modified = $common['cache_list'][$params['id']]['last_modified'] != $params['last_modified'];
+						
+						$file_exists = file_exists($css_file_name);
+						if ($file_exists) {
+							//Проверяем на факт изменения файла, 
+							//Дата модификации файла === дата модификации файла из списка кэша
+							$params['last_modified'] = @filemtime($css_file_name);
+							$in_cache_list = array_key_exists($params['id'], $common['cache_list']);
+							if (isset($common['cache_list'][$params['id']])) {
+								if (array_key_exists($params['id'], $common['cache_list'])) {
+									$is_modified = $common['cache_list'][$params['id']]['last_modified'] != $params['last_modified'];
+								}else{
+									$is_modified = true;
+								}
 							}else{
 								$is_modified = true;
 							}
 						}else{
+							$in_cache_list = false;
 							$is_modified = true;
 						}
 					}
-					$is_file = is_file($css_file_name);
-					
-					if (!$is_file || !$in_cache_list || $is_modified) {
-						$params['filename'] = $css_file_name;
-						$this->settings['common']['cache_list'][$params['id']] = $params;
-						$this->settings['changed'] = true;
-						unset($params);
+
+					//Если файл еще не существует || Нет в кэше || был модифицирован
+					if (!$file_exists || !$in_cache_list || $is_modified) {
+						//обнуляем переменные
 						$content = '';
 						$f_content = '';
 						$m_content = '';
 						$m_names = '';
+						//Собираем содержимое файлов в один
 						foreach ($media_type as $key => $value) {
 							$handle = fopen($value['href'],	'r');
 							$f_content = fread($handle, filesize($value['href']));
 							
+							//Обрабатываем изображения
 							$f_content = $this->css_ob_handler($f_content, $value['href'], $css_file_name);
 							
 							if (!$css['merge'] || in_array($value['href'], $css['not_minimize_list'], true)) {
@@ -520,64 +533,99 @@
 							}
 							fclose($handle);
 						}
+						//Минимизируем и записываем
 						$content .= $this->minimize_css($m_content);
 						$content .= $m_names;
 						$this->write_to_file($css_file_name, $content);
-						unset($f_content, $content, $m_content, $m_names);
+						
+						//Заполняем массив $params для записи в кэш
+						//$id = array($filename, $last_modified);
+						$params['filename'] = $css_file_name;
+						$params['last_modified'] = filemtime($css_file_name);
+						
+						//Записываем файлы в кэш
+						$this->settings['common']['cache_list'][$params['id']] = $params;
+						//Ставим отметку о том, что кэш изменился
+						$this->settings['changed'] = true;
 					}else{
-						#echo "Files Not Changed";
+						//Если файл существует, присутствует в кэше и не модифицирован	
 					}
-				$this->addStyle($css_file_name, $media_type[0]['media'], true, $hash);
+					//Добавляем ссылку на файл в список стилей
+					$this->addStyle($css_file_name, $media_type[0]['media'], true, $hash);
 				}
 			}else{
+				//Если $files не массив
 				if (in_array($files, $css['not_minimize_list'], true)){
+					//Если файл в списке исключенных из минимизации, то добавляем ссылку на файл в список стилей
 					$this->addStyle($files, $media, false, $hash);
 				}else{
+					//Обнуление переменных
 					$params = array();
-					$params['id']				= substr(md5($files), 16);
+					//Создание уникального имени для файла
+					$params['id'] = substr(md5($files), 16);
+					//Вычисляем название файла
 					$css_file_name = $directory.'/'.$params['id'].'.css';
+					
+					//Если используется быстрое кэширование
 					if ($common['use_ultra_cache']) {
+						//Не проверяем
+						$file_exists = file_exists($css_file_name);
 						$in_cache_list = true;
 						$is_modified = false;	
 					}else{
-						$params['last_modified'] 	= filemtime($files);
-						$in_cache_list = array_key_exists($params['id'], $common['cache_list']);
-						if (isset($common['cache_list'][$params['id']]['last_modified'])) {
-							$is_modified = $common['cache_list'][$params['id']]['last_modified'] != $params['last_modified'];
+						$file_exists = file_exists($css_file_name);
+						if ($file_exists) {
+							//Проверяем на факт изменения файла, 
+							//Дата модификации файла === дата модификации файла из списка кэша
+							$params['last_modified'] = @filemtime($css_file_name);
+							$in_cache_list = array_key_exists($params['id'], $common['cache_list']);
+							if (isset($common['cache_list'][$params['id']]['last_modified'])) {
+								$is_modified = $common['cache_list'][$params['id']]['last_modified'] != $params['last_modified'];
+							}else{
+								$is_modified = true;
+							}
 						}else{
-							$is_modified = true;
+							$in_cache_list = false;
+							$is_modified = true;	
 						}
 					}
-					$is_file = is_file($css_file_name);
-				
-					if (!$is_file || !$in_cache_list || $is_modified) {
-						$params['filename'] = $css_file_name;
-						$params['last_modified'] 	= filemtime($files);
-						$this->settings['common']['cache_list'][$params['id']] = $params;
-						$this->settings['changed'] = true;
-						unset($params);
+
+					//Если файл еще не существует || Нет в кэше || был модифицирован
+					if (!$file_exists || !$in_cache_list || $is_modified) {	
+						//Обнуление переменных
 						$content = '';
 						$f_content = '';
 						$m_names = '';
+						//Собираем содержимое файлов в один
 						$m_names .= '/*! _['.$files.']_ */'.PHP_EOL;
 						$handle = fopen($files,	'r');
 						$f_content = fread($handle, filesize($files));
-						
+						//Обрабатываем изображения
 						$f_content = $this->css_ob_handler($f_content, $files, $css_file_name);
 
+						// Минимизируем
 						if (!$css['merge'] || in_array($files, $css['not_minimize_list'], true)) {
 							$content .= $f_content.PHP_EOL.PHP_EOL;
 						}else{
 							$content .= $this->minimize_css($f_content);
 						}
 						fclose($handle);
-
+						
+						// записываем
 						$content .= $m_names;
 						$this->write_to_file($css_file_name, $content);
-						unset($content, $f_content, $m_names);
+						
+						//Заполняем массив $params для записи в кэш
+						//$id = array($filename, $last_modified);
+						$params['filename'] = $css_file_name;
+						$params['last_modified'] = filemtime($css_file_name);
+						//Если файл существует, присутствует в кэше и не модифицирован
+						$this->settings['common']['cache_list'][$params['id']] = $params;
+						$this->settings['changed'] = true;
 					}else{
-						#echo "Files Not Changed";
+						//Если файл существует, присутствует в кэше и не модифицирован
 					}
+					//Добавляем ссылку на файл в список стилей
 					$this->addStyle($css_file_name, $media, true, $hash);
 				}
 			}

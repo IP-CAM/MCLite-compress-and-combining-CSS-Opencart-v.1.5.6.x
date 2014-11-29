@@ -26,14 +26,14 @@ $_['text_file_original']      		= 'Оригинальный';
 $_['text_file_minimized']      		= 'Минимизированный';
 $_['text_file_gzipped']      		= 'Сжатый';
 $_['text_average_rating']      		= 'Средний результат:';
-$_['text_dir_check_success']      	= '&nbsp;Выбранная папка доступна для записи.';
-$_['text_dir_check_failed']      	= '&nbsp;Выбранная папка недоступна для записи.';
-$_['text_dir_check_demo']      		= '&nbsp;У Вас нет прав для использования этой функции. Демо режим.';
+$_['text_dir_check_success']      	= '&nbsp;&nbsp;Выбранная папка доступна для записи.';
+$_['text_dir_check_failed']      	= '&nbsp;&nbsp;Выбранная папка недоступна для записи.';
+$_['text_dir_check_demo']      		= '&nbsp;&nbsp;У Вас нет прав для использования этой функции. Демо режим.';
 
 // Text Common
 $_['tab_common']				   					= 'Общие';
 	$_['text_success']                 				= 'Настройки успешно изменены';
-	$_['text_use_static_gzip']                 		= 'Использовать Gzip сжатие: <br /><span class="help">Передавать сжатые css и js.</span>';
+	$_['text_use_static_gzip']                 		= 'Использовать статическое Gzip сжатие: <br /><span class="help">Передавать уже сжатые css и js.</span>';
 	$_['text_use_ultra_cache']                 		= 'Использовать быстрое кеширование:<br /><span class="help">Отключает проверку даты последнего изменения файлов.</span>';
 	$_['text_minify_html']                 			= 'Сжимать HTML код:<br />';
 	$_['text_dir_cache_css']                 		= 'Папка для хранения css:';
@@ -44,9 +44,10 @@ $_['tab_common']				   					= 'Общие';
 	$_['text_delivery_systems_imgs']               	= 'Images:';
 	$_['text_delivery_systems_cssurl']              = 'CSS URL:';
 	$_['text_optimize_db']       	          		= 'Оптимизировать базу данных:<br /><span class="help">Оптимизирует базу данных магазина средствами MySQL.</span>';
-	$_['text_optimixe_db_button']              		= 'Начать';
+	$_['text_optimize_db_button']              		= 'Начать';
+	$_['text_optimize_db_button_remove']           	= 'Скрыть';
 	$_['text_success_db_optim']              		= 'База данных успешно оптимизирована.';
-
+	
 $_['text_html_minimize_library']                 	= 'Библиотека минимизации:';
 	$_['text_html_minimize_library_Minify_HTML']                 = 'Minify HTML';
 	$_['text_html_minimize_library_HTMLMinRegex']                = 'HTMLMin Regex';
@@ -102,7 +103,6 @@ $_['tab_help']										= 'Помощь';
 $_['button_save']					   				= 'Сохранить';
 $_['button_cancel']					   				= 'Отмена';
 $_['button_delete']             					= 'Удалить выбранные';
-$_['button_select_css']             				= 'Выбрать всe css';
 
 //Errors
 $_['error_permission']             					= 'Внимание: у Вас нет прав для редактирования этого раздела!';

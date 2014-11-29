@@ -48,5 +48,6 @@ require_once(DIR_SYSTEM . 'library/db.php');
 // Database 
 $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
 $db->query($setup_sql);
+unlink(__FILE__);
 echo "<html><head><title>mclite database installation complete</title></head><body><h1><b>mclite database query complete</h1></body></html> ";
 ?>
