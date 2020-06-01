@@ -1,5 +1,87 @@
 #MCLite
 
+ MCLite this free module for OpenCart, which is designed to automatically compress and combining CSS files.
+
+ ## How does MCLite
+
+ Before you send a page to the client, it scans the code, finding in it all CSS files and processes them in accordance with the configuration and settings of the whole bunch (and libraries to minimize).  After processing, it retains the new (compressed) CSS files into a temporary folder.  Then substitute minimized links to CSS files in the page code.  Thus the original CSS files remain intact.  After sending this style file for the page deals with the server, rather than PHP.  Compressed and transmitted only the styles that are used on the visited page.
+
+ ## Features MCLite
+
+     The presence of several libraries to minimize CSS
+     The ability to insert in the Picture Style files encoded in base64, regardless of the chosen minimizer (benefits)
+     Packing style files gzip algorithm when creating the file.  Those.  not to spend time compression "on the fly"
+     The ability to use Domain CDN to return CSS and images
+     There is a function to optimize database
+     Multiple file association modes
+     The possibility to exclude certain files from the processing / association / minimize
+     An HTML compression feature (on the fly, without caching)
+     The presence of several libraries to compress HTML
+     minimum file
+     Convenient cache manager statistics compression
+     The presence uninstaller (removes with the files and records of the module)
+
+ ##Resources
+
+ In the MCLite used open source projects, such as
+
+     CSSMin Joe Scylla
+     CSSMin Regex Shashakhmetov Talgat
+     YUI CSS Compressor php port Tubal Martin
+     CanCSSMini andi
+     Crunch CSS Shirley Kaiser
+     Minify HTML Stephen Clay
+     HTMLMin Regex Shashakhmetov Talgat
+     Crunch HTML Shirley Kaiser
+
+ ## Supported versions
+
+ All versions starting from 1.5.1 to 1.5.6.4 inclusive.
+
+ ## Installation
+
+ ### Step 1: Copy files
+
+ Copy the contents of the folder "upload" to the root directory of the site.
+
+ ### Step 2. Edit files
+
+ In the file "index.php" before the line $ response-> output ();  (At the end of file)
+
+ // MCLite
+ if (preg_match ( '/ head> / im', $ response-> output) &&! defined ( 'DIR_CATALOG')) {
+     $ Loader-> library ( 'mclite / mclite.class');
+     $ Mclite = new mclite ($ registry, $ response-> output);
+     $ Response-> output = $ mclite-> output;
+ }
+
+ The file "system / library / response.php" line
+
+ private $ output;
+
+ replaced by
+
+ public $ output;
+
+ ### Step 3: Adding entries to the database
+
+ Copy the file to the root directory "install.php".  Run it through your browser.  Example, http: //adres-sayta/install.php.  He adds the new values ​​into the database.  After performing necessary to delete the file !!!
+
+ ### Step 4: Configure privileges OpenCart
+
+ In the administrative panel of the site go to "System-> Polzovateli-> User Groups'.  Next to the line "Chief Administrator" click "Edit."  The lists of "Approved view" and "allow for changes" tick "mcj / setting", or click "Select All".  Save.
+
+ ### Step 5: Configuring .htaccess
+
+ To use the static file compression in the .htaccess file, you must add:
+
+ AddType text / css .css .cssgz
+ AddEncoding x-gzip .cssgz
+
+-----------
+
+#MCLite
+
 MCLite бесплатный это модуль для OpenCart, который предназначен для автоматического сжатия и объединения CSS файлов. 
 
 ##Как работает MCLite
