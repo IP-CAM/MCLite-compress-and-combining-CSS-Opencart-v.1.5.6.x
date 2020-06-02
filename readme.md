@@ -1,4 +1,4 @@
-#MCLite
+#MCLite COmpress / Combine CSS Code
 
  MCLite this free module for OpenCart, which is designed to automatically compress and combining CSS files.
 
